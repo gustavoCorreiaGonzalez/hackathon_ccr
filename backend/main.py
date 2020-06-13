@@ -6,18 +6,11 @@ from flask_jwt_extended import (JWTManager, create_access_token,
                                 get_jwt_identity, jwt_required)
 
 from app import app, db
-from app.models.user import User, user_share_schema, users_share_schema
+from app.models.user import User, user_share_schema
+from app.models.trucker import Trucker, trucker_share_schema, truckers_share_schema
 
 Migrate(app, db)
 jwt = JWTManager(app)
-
-@app.shell_context_processor
-def make_shell_context():
-    return dict(
-        app=app,
-        db=db,
-        User=User
-    )
     
 @app.route('/auth/register', methods=['POST'])
 def register():
@@ -64,3 +57,49 @@ def login():
         'token': access_token
     }), 200
 
+@app.route('/trucker', methods=['POST'])
+@jwt_required
+def trucker_registrer():
+    name = request.json['name']
+    age = request.json['age']
+    whatsapp = request.json['whatsapp']
+
+    if not name:
+        return jsonify({'error': 'Nome não encontrado na requisição'}), 400
+    if not age:
+        return jsonify({'error': 'Age não encontrado na requisição'}), 400
+    if not whatsapp:
+        return jsonify({'error': 'Whatsapp não encontrado na requisição'}), 400
+
+    trucker = Trucker(
+        name,
+        age,
+        whatsapp
+    )
+
+    db.session.add(trucker)
+    db.session.commit()
+
+    result = trucker_share_schema.dump(        
+        User.query.filter_by(whatsapp=whatsapp).first()
+    )
+
+    return jsonify(result)
+
+@app.route('/trucker', methods=['GET'])
+@jwt_required
+def get_all_truckers():
+    result = truckers_share_schema.dump(
+        Trucker.query.all()
+    )
+
+    return jsonify(result)
+
+@app.route('/trucker/<id>', methods=['GET'])
+@jwt_required
+def get_trucker():
+    result = trucker_share_schema.dump(
+        Trucker.query.filter_by(id=id).first()
+    )
+
+    return jsonify(result)
