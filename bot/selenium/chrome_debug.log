@@ -1,5 +1,5 @@
-[28970:28970:0614/034757.437871:ERROR:browser_switcher_service.cc(238)] XXX Init()
-[29007:29018:0614/034757.612735:WARNING:spdy_session.cc(3306)] Received HEADERS for invalid stream 5
-[29004:29004:0614/034849.929992:WARNING:x11_util.cc(1456)] X error received: serial 357, error_code 3 (BadWindow), request_code 4, minor_code 0 (Unknown)
-[28970:28970:0614/034849.957146:WARNING:pref_notifier_impl.cc(40)] Pref observer for media_router.cast_allow_all_ips found at shutdown.
-[28970:28970:0614/034849.957174:WARNING:pref_notifier_impl.cc(40)] Pref observer for browser.relaunch_notification_period found at shutdown.
+[3108:3108:0614/144540.529480:ERROR:browser_switcher_service.cc(238)] XXX Init()
+[3151:3151:0614/144544.050174:WARNING:x11_util.cc(1456)] X error received: serial 367, error_code 3 (BadWindow), request_code 4, minor_code 0 (Unknown)
+[3151:3151:0614/144544.056290:WARNING:ipc_message_attachment_set.cc(49)] MessageAttachmentSet destroyed with unconsumed attachments: 0/1
+[3108:3108:0614/144544.072154:WARNING:pref_notifier_impl.cc(40)] Pref observer for media_router.cast_allow_all_ips found at shutdown.
+[3108:3108:0614/144544.072178:WARNING:pref_notifier_impl.cc(40)] Pref observer for browser.relaunch_notification_period found at shutdown.
