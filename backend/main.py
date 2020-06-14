@@ -1,15 +1,18 @@
+import json
 from datetime import datetime
+from time import mktime
 
 from flask import jsonify, request
+from flask_jwt_extended import JWTManager, create_access_token
 from flask_migrate import Migrate
-from flask_jwt_extended import (JWTManager, create_access_token,
-                                get_jwt_identity, jwt_required)
 
 from app import app, db
-from app.models.user import User, user_share_schema
-from app.models.trucker import Trucker, trucker_share_schema, truckers_share_schema
 from app.models.event import Event, event_share_schema, events_share_schema
-from app.models.occurrence import Occurrence, occurrence_share_schema, occurrences_share_schema
+from app.models.occurrence import (Occurrence, occurrence_share_schema,
+                                   occurrences_share_schema)
+from app.models.trucker import (Trucker, trucker_share_schema,
+                                truckers_share_schema)
+from app.models.user import User, user_share_schema
 
 Migrate(app, db)
 jwt = JWTManager(app)
@@ -60,7 +63,6 @@ def login():
     }), 200
 
 @app.route('/trucker', methods=['POST'])
-#@jwt_required
 def trucker_registrer():
     name = request.json['name']
     age = request.json['age']
@@ -88,7 +90,6 @@ def trucker_registrer():
     return jsonify(result)
 
 @app.route('/trucker', methods=['GET'])
-#@jwt_required
 def get_all_truckers():
     result = truckers_share_schema.dump(
         Trucker.query.all()
@@ -97,7 +98,6 @@ def get_all_truckers():
     return jsonify(result)
 
 @app.route('/trucker/<id>', methods=['GET'])
-#@jwt_required
 def get_trucker(id):
     result = trucker_share_schema.dump(
         Trucker.query.filter_by(id=id).first()
@@ -106,7 +106,6 @@ def get_trucker(id):
     return jsonify(result)
 
 @app.route('/trucker/localization', methods=['POST'])
-#@jwt_required
 def update_localization():
     whatsapp = request.json['whatsapp']
     latitude = request.json['latitude']
@@ -121,35 +120,36 @@ def update_localization():
     return jsonify({'message': 'Localização atulaizada com sucesso!'})
 
 @app.route('/event', methods=['POST'])
-#@jwt_required
 def event_registrer():
-    name = request.json['name']
-    descripton = request.json['descripton']
-    date = datetime.strptime(request.json['date'], '%d/%m/%Y').utcnow()
-    type_event = request.json['type_event']
-    latitude = request.json['latitude']
-    longitude = request.json['longitude']
+    if request.json['type_event'] in ['eventos-saude', 'eventos-bem-estar', 'eventos-informativo']:
+        name = request.json['name']
+        descripton = request.json['descripton']
+        date = datetime.strptime(request.json['date'], '%d/%m/%Y').date()
+        type_event = request.json['type_event']
+        latitude = request.json['latitude']
+        longitude = request.json['longitude']
 
-    event = Event(
-        name,
-        descripton,
-        date,
-        type_event,
-        latitude,
-        longitude
-    )
+        event = Event(
+            name,
+            descripton,
+            date,
+            type_event,
+            latitude,
+            longitude
+        )
 
-    db.session.add(event)
-    db.session.commit()
+        db.session.add(event)
+        db.session.commit()
 
-    result = event_share_schema.dump(        
-        User.query.filter_by(name=name).first()
-    )
+        result = event_share_schema.dump(        
+            Event.query.filter_by(name=name).first()
+        )
 
-    return jsonify(result)
+        return jsonify(result)
+    
+    return jsonify({'error': 'Tipo de evento inválido!'})
 
 @app.route('/event', methods=['GET'])
-#@jwt_required
 def get_all_events():
     result = events_share_schema.dump(
         Event.query.all()
@@ -158,7 +158,6 @@ def get_all_events():
     return jsonify(result)
 
 @app.route('/event/<id>', methods=['GET'])
-#@jwt_required
 def get_event(id):
     result = event_share_schema.dump(
         Event.query.filter_by(id=id).first()
@@ -166,17 +165,23 @@ def get_event(id):
 
     return jsonify(result)
 
-@app.route('/event/type/<type>', methods=['GET'])
-#@jwt_required
-def get_event_per_type(type):
-    result = event_share_schema.dump(
-        Event.query.filter_by(type_event=type, date=datetime.utcnow())
+@app.route('/event/type/<type_event>', methods=['GET'])
+def get_event_per_type(type_event):
+    result = events_share_schema.dump(
+        Event.query.filter_by(type_event=type_event, date=datetime.utcnow()).all()
     )
 
     return jsonify(result)
 
+@app.route('/event/date', methods=['GET'])
+def get_event_per_date():
+    result = db.engine.execute('select date, count(id) as events from events group by date')
+
+    result_dump = json.dumps([dict(r) for r in result])
+
+    return result_dump
+
 @app.route('/occurrence', methods=['POST'])
-#@jwt_required
 def occurrence_register():
     whatsapp = request.json['whatsapp']
     date = datetime.utcnow()
@@ -200,6 +205,39 @@ def occurrence_register():
     )
 
     return jsonify(result)
+
+@app.route('/occurrence', methods=['GET'])
+def get_all_occurrenceS():
+    result = occurrences_share_schema.dump(
+        Occurrence.query.all()
+    )
+
+    return jsonify(result)
+
+@app.route('/occurrence/<type_occurrence>', methods=['GET'])
+def get_occurrence_per_type(type_occurrence):
+    if type_occurrence in ['acidente', 'problema-de-saude', 'crime']:
+        result = occurrence_share_schema.dump(
+            Occurrence.query.filter_by(type_occurrence=type_occurrence).all()
+        )
+
+        return jsonify(result)
+
+    return jsonify({'error': 'Tipo de ocorrência inválida!'})
+
+@app.route('/occurrence/<whatsapp>/<type_occurrence>', methods=['GET'])
+def get_occurrence_per_whatsapp_and_type(whatsapp, type_occurrence):
+    if type_occurrence in ['acidente', 'problema-de-saude', 'crime']:
+        result = occurrence_share_schema.dump(
+            Occurrence.query.filter_by(
+                whatsapp=whatsapp,
+                type_occurrence=type_occurrence
+            ).all()
+        )
+
+        return jsonify(result)
+
+    return jsonify({'error': 'Tipo de ocorrência inválida!'})
 
 
 # nova tabela para a fazer o link de trucker com event

@@ -5,3 +5,5 @@ __pycache__/
 *$py.class
 
 backend/migrations/*
+
+backend/app/app.db
