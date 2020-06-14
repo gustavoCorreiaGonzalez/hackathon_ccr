@@ -1,0 +1,5 @@
+2020/06/14-03:21:55.822 5a2b Reusing MANIFEST /home/fronchettl/CCR/selenium/Default/IndexedDB/https_www.reddit.com_0.indexeddb.leveldb/MANIFEST-000001
+2020/06/14-03:22:58.583 5ab4 Level-0 table #5: started
+2020/06/14-03:22:58.594 5ab4 Level-0 table #5: 1688 bytes OK
+2020/06/14-03:22:58.599 5ab4 Delete type=0 #3
+2020/06/14-03:22:58.599 5ab4 Manual compaction at level-0 from (begin) .. (end); will stop at (end)

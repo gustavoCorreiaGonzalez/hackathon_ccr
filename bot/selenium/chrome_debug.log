@@ -1,3 +1,5 @@
-[6055:6055:0613/220417.162146:ERROR:browser_switcher_service.cc(238)] XXX Init()
-[6096:6109:0613/220417.357878:WARNING:spdy_session.cc(3306)] Received HEADERS for invalid stream 5
-[6093:6093:0613/220419.385155:ERROR:shared_image_representation.cc(146)] Attempt to read from an uninitialized ShardImage
+[28970:28970:0614/034757.437871:ERROR:browser_switcher_service.cc(238)] XXX Init()
+[29007:29018:0614/034757.612735:WARNING:spdy_session.cc(3306)] Received HEADERS for invalid stream 5
+[29004:29004:0614/034849.929992:WARNING:x11_util.cc(1456)] X error received: serial 357, error_code 3 (BadWindow), request_code 4, minor_code 0 (Unknown)
+[28970:28970:0614/034849.957146:WARNING:pref_notifier_impl.cc(40)] Pref observer for media_router.cast_allow_all_ips found at shutdown.
+[28970:28970:0614/034849.957174:WARNING:pref_notifier_impl.cc(40)] Pref observer for browser.relaunch_notification_period found at shutdown.

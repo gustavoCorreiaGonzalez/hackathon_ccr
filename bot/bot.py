@@ -1,106 +1,76 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.chrome.options import Options
+from whatsapp_api import WhatsappAPI
+from datetime import datetime
 import time
-import random
 
-class WhatsappBot:
+class Pistao:
     def __init__(self):
-        chrome_options = Options()
-        chrome_options.add_argument("user-data-dir=selenium")
-        self.browser = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=chrome_options)
-        self.browser.get("https://web.whatsapp.com")
-        time.sleep(5)
+        self.api = WhatsappAPI()
+        self.bot_name = 'Felipe Fronchetti'
+        self.last_action = {}
+        self.last_location = {}
 
-    def select_contact(self, contact_name):
-        user = self.browser.find_element_by_xpath('//span[@title="{}"]'.format(contact_name))
-        user.click()
+    def run(self):
+        while True:
+            for contact in self.api.get_contacts():
+                self.api.select_contact(contact)
+                locations = self.api.get_location_messages(contact)
+                messages = self.api.get_text_messages(contact)
+                self.update_locations(locations)
+                self.execute_commands(messages)
+                time.sleep(5)
+            self.api.browser.refresh()
+            time.sleep(10)
 
-    def get_contacts(self):
-        contacts = []
+    def execute_commands(self, messages):
+        for key in messages:
+            author = key.split('] ')[1].strip().replace(':','')
+            timestamp = datetime.strptime(key.split('[')[1].split(']')[0], '%I:%M %p, %m/%d/%Y')
+            message = messages[key].lower()
 
-        for contact_box in self.browser.find_elements_by_css_selector('._357i8'):
-            name = contact_box.find_elements_by_css_selector('._3ko75._5h6Y_._3Whw5')
-            contacts.append(name.text)
+            if author not in self.last_action.keys():
+                self.last_action[author] = {'action': None, 'timestamp': datetime(2020, 1, 1)}
 
-        return contacts
- 
-    def get_text_messages(self, contact_name):
-        self.browser.refresh()
-        time.sleep(5)
-        self.select_contact(contact_name)
-        messages = {}
-        message_counter = 1
+            if timestamp > self.last_action[author]['timestamp']:
+                if message == 'registrar':
+                    self.api.send_text_message('{}, registrado com sucesso!'.format(author))
+                    self.last_action[author] = {'action': 'registrar', 'timestamp': timestamp}
+                elif message == 'humor':
+                    lines = ['{}, já dizia o para-choque do meu caminhão:'.format(author),
+                             '```Se casamento fosse bom não precisaria de testemunhas.```']
+                    self.api.send_text_message(lines)
+                    self.last_action[author] = {'action': 'humor', 'timestamp': timestamp}
+                elif message == 'emergencia':
+                    lines = ['Digite *1* para reportar acidentes de trânsito.',
+                             'Digite *2* para reportar problemas de saúde.',
+                             'Digite *3* para reportar crimes.']
+                    self.api.send_text_message(lines)
+                    self.last_action[author] = {'action': 'emergencia', 'timestamp': timestamp}
+                elif message in ['1', '2', '3']:
+                    if self.last_action[author]['action'] == 'emergencia':
+                        self.api.send_text_message('Emergência recebida. Um operador entrará em contato em instantes...')
 
-        for message_box in self.browser.find_elements_by_xpath('//div[@class="_274yw"]'):
-            try:
-                message = message_box.find_element_by_xpath('.//div[@class="_11PeL copyable-text"]')
-                datetime_and_user = message.get_attribute("data-pre-plain-text")
-                text = message.find_element_by_xpath('.//div[@class="eRacY"]').text
-                messages[str(message_counter) + ' ' + datetime_and_user ] = text
-                message_counter = message_counter + 1
-            except NoSuchElementException:
-                pass
-            try:
-                message = message_box.find_element_by_xpath('.//div[@class="copyable-text"]')
-                datetime_and_user = message.get_attribute("data-pre-plain-text")
-                text = message.find_element_by_xpath('.//div[@class="eRacY"]').text
-                messages[str(message_counter) + ' ' + datetime_and_user] = text
-                message_counter = message_counter + 1
-            except NoSuchElementException:
-                pass
+                        if message == '1':
+                            self.last_action[author] = {'action': 'acidente', 'timestamp': timestamp}
+                        if message == '2':
+                            self.last_action[author] = {'action': 'problema-de-saude', 'timestamp': timestamp}
+                        if message == '3':
+                            self.last_action[author] = {'action': 'crime', 'timestamp': timestamp}
 
-        return messages
+                        self.api.send_text_message('Por favor envie sua localização atual clicando no botão *+* do WhatsApp.')
+                    else:
+                        self.last_action[author] = {'action': 'false-positive', 'timestamp': timestamp}
 
-    def get_location_messages(self, contact_name):
-        self.browser.refresh()
-        time.sleep(5)
-        self.select_contact(contact_name)
-        locations = {}
-        location_counter = 1
+    def update_locations(self, locations):
+        for key in locations:
+            author = key.split('] ')[1].strip().replace(':','')
+            timestamp = datetime.strptime(key.split('[')[1].split(']')[0], '%I:%M %p, %m/%d/%Y')
 
-        try: # Live
-            for location_box in self.browser.find_elements_by_xpath('//div[@class="_e0cu _1F1_W copyable-text"]'):
-                datetime_and_user = location_box.get_attribute("data-pre-plain-text")
-                coordinates = location_box.find_element_by_xpath('.//img[@class="_9OGCm _3Whw5"]').get_attribute("src")
-                locations[str(location_counter)  + ' ' +  datetime_and_user] = coordinates
-                location_counter = location_counter + 1
-        except NoSuchElementException:
-            pass
-        try: # Static
-            for location_box in self.browser.find_elements_by_xpath('//div[@class="_1Yj6K copyable-text"]'):
-                datetime_and_user = location_box.get_attribute("data-pre-plain-text")
-                coordinates = location_box.find_element_by_xpath('.//img[@class="_16lK4 _3Whw5"]').get_attribute("src")
-                locations[str(location_counter)  + ' ' +  datetime_and_user] = coordinates
-                location_counter = location_counter + 1
-        except NoSuchElementException:
-            pass
+            if author not in self.last_location.keys():
+                self.last_location[author] = {'coordinate': None, 'timestamp': datetime(2020, 1, 1)}
 
-        return locations
-    
-    def send_text_message(self, contact_name, message):
-        self.select_contact(contact_name)
-        time.sleep(random.randint(5, 15))
+            if timestamp > self.last_location[author]['timestamp']:
+                self.last_location[author] = {'coordinate': locations[key], 'timestamp': timestamp}
 
-        text_field = self.browser.find_element_by_xpath('//div[@class="_3uMse"]')
-        text_field.send_keys(message)
-        text_button = self.browser.find_element_by_xpath('//button[@class="_1U1xa"]')
-        text_button.click()
-
-    def send_url(self, contact_name, message):
-        self.select_contact(contact_name)
-        time.sleep(random.randint(5, 15))
-
-        text_field = self.browser.find_element_by_xpath('//div[@class="_3uMse"]')
-        text_field.send_keys(message)
-        time.sleep(5)
-        text_button = self.browser.find_element_by_xpath('//button[@class="_1U1xa"]')
-        text_button.click()
-    
-bot = WhatsappBot()
-
-print(len(bot.get_contacts()))
-for contact in bot.get_contacts():
-    print(contact)
+pistao = Pistao()
+pistao.run()
+        
