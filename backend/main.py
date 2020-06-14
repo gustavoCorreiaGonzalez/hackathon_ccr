@@ -10,6 +10,9 @@ from app import app, db
 from app.models.event import Event, event_share_schema, events_share_schema
 from app.models.occurrence import (Occurrence, occurrence_share_schema,
                                    occurrences_share_schema)
+from app.models.participation import (Participation,
+                                      participation_share_schema,
+                                      participations_share_schema)
 from app.models.trucker import (Trucker, trucker_share_schema,
                                 truckers_share_schema)
 from app.models.user import User, user_share_schema
@@ -17,6 +20,10 @@ from app.models.user import User, user_share_schema
 Migrate(app, db)
 jwt = JWTManager(app)
     
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({'message': 'Server On'})
+
 @app.route('/auth/register', methods=['POST'])
 def register():
     username = request.json['username']
@@ -168,7 +175,7 @@ def get_event(id):
 @app.route('/event/type/<type_event>', methods=['GET'])
 def get_event_per_type(type_event):
     result = events_share_schema.dump(
-        Event.query.filter_by(type_event=type_event, date=datetime.utcnow()).all()
+        Event.query.filter_by(type_event=type_event, date=datetime.utcnow().strftime('%Y-%m-%d')).all()
     )
 
     return jsonify(result)
@@ -239,9 +246,49 @@ def get_occurrence_per_whatsapp_and_type(whatsapp, type_occurrence):
 
     return jsonify({'error': 'Tipo de ocorrência inválida!'})
 
+@app.route('/participation', methods=['POST'])
+def participation_registrer():
+    event_id = request.json['event_id']
+    trucker_whatsapp = request.json['trucker_whatsapp']
+    date = datetime.utcnow()
 
-# nova tabela para a fazer o link de trucker com event
+    participation = Participation(
+        event_id,
+        trucker_whatsapp,
+        date
+    )
 
-# sugestoes bonus
-    # nome
-    # descricao
+    db.session.add(participation)
+    db.session.commit()
+
+    result = participation_share_schema.dump(        
+        Participation.query.filter_by(trucker_whatsapp=trucker_whatsapp).first()
+    )
+
+    return jsonify(result)
+
+@app.route('/participation', methods=['GET'])
+def get_all_participations():
+    result = participations_share_schema.dump(
+        Participation.query.all()
+    )
+
+    return jsonify(result)
+
+@app.route('/participation/event/<event_name>', methods=['GET'])
+def get_all_participations_per_event(event_name):
+    result = db.engine.execute("select e.name, count(p.id) as participations from participations as p inner join events as e on p.event_id = e.id where e.type_event = '{}' group by p.event_id".format(
+        event_name))
+
+    result_dump = json.dumps([dict(r) for r in result])
+
+    return result_dump
+
+@app.route('/participation/trucker/<trucker_whatsapp>', methods=['GET'])
+def get_all_participations_per_trucker(trucker_whatsapp):
+    result = db.engine.execute("select t.name, count(p.id) as participations from participations as p inner join truckers as t on p.trucker_whatsapp = t.whatsapp where t.whatsapp = '{}' group by p.trucker_whatsapp".format(
+        trucker_whatsapp))
+
+    result_dump = json.dumps([dict(r) for r in result])
+
+    return result_dump
