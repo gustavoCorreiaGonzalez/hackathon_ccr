@@ -1,0 +1,5 @@
+2020/06/13-21:23:49.407 78ee Reusing MANIFEST /home/fronchettl/CCR/selenium/Default/IndexedDB/https_tpc.googlesyndication.com_0.indexeddb.leveldb/MANIFEST-000001
+2020/06/13-21:24:06.659 77f2 Level-0 table #5: started
+2020/06/13-21:24:06.665 77f2 Level-0 table #5: 360 bytes OK
+2020/06/13-21:24:06.670 77f2 Delete type=0 #3
+2020/06/13-21:24:06.670 77f2 Manual compaction at level-0 from (begin) .. (end); will stop at (end)
