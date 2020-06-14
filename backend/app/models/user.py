@@ -6,10 +6,12 @@ class User(db.Model):
 
     id = db.Column(db.Integer, autoincrement=True, primary_key = True)
     username = db.Column(db.String(120), unique = True, nullable = False)
+    email = db.Column(db.String(120), nullable = False)
     password = db.Column(db.String(120), nullable = False)
 
-    def __init__(self, username, password):
+    def __init__(self, username, email, password):
         self.username = username
+        self.email = email
         self.password = generate_password_hash(password)
     
     def verify_password(self, password):
@@ -20,7 +22,7 @@ class User(db.Model):
 
 class UserSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'username')
+        fields = ('id', 'username', 'email')
 
 user_share_schema = UserSchema()
 users_share_schema = UserSchema(many=True)

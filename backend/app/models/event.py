@@ -7,8 +7,8 @@ class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True, nullable=False)
     descripton = db.Column(db.String(255), nullable=False)
-    date = db.Column(db.Data(), nullable=False)
-    type_event = db.Column(db.Sting(255), nullable=False)
+    date = db.Column(db.Date(), nullable=False)
+    type_event = db.Column(db.String(255), nullable=False)
     latitude = db.Column(db.String(255), nullable=False)
     longitude = db.Column(db.String(255), nullable=False)
     

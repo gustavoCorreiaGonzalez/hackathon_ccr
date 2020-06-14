@@ -5,9 +5,10 @@ from flask_migrate import Migrate
 from flask_jwt_extended import (JWTManager, create_access_token,
                                 get_jwt_identity, jwt_required)
 
-from app import app, db
+from app import app, db, crontab
 from app.models.user import User, user_share_schema
 from app.models.trucker import Trucker, trucker_share_schema, truckers_share_schema
+from app.models.event import Event, event_share_schema, events_share_schema
 
 Migrate(app, db)
 jwt = JWTManager(app)
@@ -81,7 +82,7 @@ def trucker_registrer():
     db.session.commit()
 
     result = trucker_share_schema.dump(        
-        User.query.filter_by(whatsapp=whatsapp).first()
+        Trucker.query.filter_by(whatsapp=whatsapp).first()
     )
 
     return jsonify(result)
@@ -103,3 +104,53 @@ def get_trucker():
     )
 
     return jsonify(result)
+
+@app.route('/event', methods=['POST'])
+@jwt_required
+def event_registrer():
+    name = request.json['name']
+    descripton = request.json['descripton']
+    date = request.json['date']
+    type_event = request.json['type_event']
+    latitude = request.json['latitude']
+    longitude = request.json['longitude']
+
+    event = Event(
+        name,
+        descripton,
+        date,
+        type_event,
+        latitude,
+        longitude
+    )
+
+    db.session.add(event)
+    db.session.commit()
+
+    result = event_share_schema.dump(        
+        User.query.filter_by(name=name).first()
+    )
+
+    return jsonify(result)
+
+@app.route('/event', methods=['GET'])
+@jwt_required
+def get_all_events():
+    result = events_share_schema.dump(
+        Trucker.query.all()
+    )
+
+    return jsonify(result)
+
+@app.route('/event/<id>', methods=['GET'])
+@jwt_required
+def get_event():
+    result = event_share_schema.dump(
+        Trucker.query.filter_by(id=id).first()
+    )
+
+    return jsonify(result)
+
+# @crontab.job(minute="2", hour="0")
+# def my_scheduled_job():
+#     print("teste")
