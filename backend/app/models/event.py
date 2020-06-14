@@ -8,7 +8,10 @@ class Event(db.Model):
     name = db.Column(db.String(255), unique=True, nullable=False)
     descripton = db.Column(db.String(255), nullable=False)
     date = db.Column(db.Date(), nullable=False)
+    
+    # "bem estar" "saúde" "informativo"
     type_event = db.Column(db.String(255), nullable=False)
+    
     latitude = db.Column(db.String(255), nullable=False)
     longitude = db.Column(db.String(255), nullable=False)
     

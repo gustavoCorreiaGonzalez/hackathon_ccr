@@ -1,14 +1,15 @@
-import datetime
+from datetime import datetime
 
 from flask import jsonify, request
 from flask_migrate import Migrate
 from flask_jwt_extended import (JWTManager, create_access_token,
                                 get_jwt_identity, jwt_required)
 
-from app import app, db, crontab
+from app import app, db
 from app.models.user import User, user_share_schema
 from app.models.trucker import Trucker, trucker_share_schema, truckers_share_schema
 from app.models.event import Event, event_share_schema, events_share_schema
+from app.models.occurrence import Occurrence, occurrence_share_schema, occurrences_share_schema
 
 Migrate(app, db)
 jwt = JWTManager(app)
@@ -98,7 +99,7 @@ def get_all_truckers():
 
 @app.route('/trucker/<id>', methods=['GET'])
 @jwt_required
-def get_trucker():
+def get_trucker(id):
     result = trucker_share_schema.dump(
         Trucker.query.filter_by(id=id).first()
     )
@@ -110,7 +111,7 @@ def get_trucker():
 def event_registrer():
     name = request.json['name']
     descripton = request.json['descripton']
-    date = request.json['date']
+    date = datetime.strptime(request.json['date'], '%d/%m/%Y').date()
     type_event = request.json['type_event']
     latitude = request.json['latitude']
     longitude = request.json['longitude']
@@ -137,20 +138,53 @@ def event_registrer():
 @jwt_required
 def get_all_events():
     result = events_share_schema.dump(
-        Trucker.query.all()
+        Event.query.all()
     )
 
     return jsonify(result)
 
 @app.route('/event/<id>', methods=['GET'])
 @jwt_required
-def get_event():
+def get_event(id):
     result = event_share_schema.dump(
-        Trucker.query.filter_by(id=id).first()
+        Event.query.filter_by(id=id).first()
     )
 
     return jsonify(result)
 
-# @crontab.job(minute="2", hour="0")
-# def my_scheduled_job():
-#     print("teste")
+@app.route('/event/<type>/<date>', methods=['GET'])
+@jwt_required
+def get_event_per_type(type, date):
+    date_object = datetime.strptime(date, '%d/%m/%Y').date()
+
+    result = event_share_schema.dump(
+        Event.query.filter_by(type_event=type, date=date_object)
+    )
+
+    return jsonify(result)
+
+@app.route('/occurrence', methods=['POST'])
+@jwt_required
+def occurrence_register():
+    whatsapp = request.json['whatsapp']
+    date = datetime.now()
+    type_occurrence = request.json['type_occurrence']
+    latitude = request.json['latitude']
+    longitude = request.json['longitude']
+
+    occurrence = Occurrence(
+        whatsapp,
+        date,
+        type_occurrence,
+        latitude,
+        longitude
+    )
+
+    db.session.add(occurrence)
+    db.session.commit()
+
+    result = occurrence_share_schema.dump(        
+        Occurrence.query.filter_by(whatsapp=whatsapp).first()
+    )
+
+    return jsonify(result)
