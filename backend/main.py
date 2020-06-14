@@ -65,6 +65,7 @@ def trucker_registrer():
     name = request.json['name']
     age = request.json['age']
     whatsapp = request.json['whatsapp']
+    created_date = datetime.now()
 
     if not name:
         return jsonify({'error': 'Nome não encontrado na requisição'}), 400
@@ -76,7 +77,8 @@ def trucker_registrer():
     trucker = Trucker(
         name,
         age,
-        whatsapp
+        whatsapp,
+        created_date
     )
 
     db.session.add(trucker)
@@ -191,3 +193,7 @@ def occurrence_register():
 # localização na tabela de trucker
     # 
 # nova tabela para a fazer o link de trucker com event
+
+# sugestoes bonus
+    # nome
+    # descricao
