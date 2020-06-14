@@ -89,7 +89,7 @@ def trucker_registrer():
     return jsonify(result)
 
 @app.route('/trucker', methods=['GET'])
-@jwt_required
+#@jwt_required
 def get_all_truckers():
     result = truckers_share_schema.dump(
         Trucker.query.all()
@@ -98,7 +98,7 @@ def get_all_truckers():
     return jsonify(result)
 
 @app.route('/trucker/<id>', methods=['GET'])
-@jwt_required
+#@jwt_required
 def get_trucker(id):
     result = trucker_share_schema.dump(
         Trucker.query.filter_by(id=id).first()
@@ -107,7 +107,7 @@ def get_trucker(id):
     return jsonify(result)
 
 @app.route('/event', methods=['POST'])
-@jwt_required
+#@jwt_required
 def event_registrer():
     name = request.json['name']
     descripton = request.json['descripton']
@@ -135,7 +135,7 @@ def event_registrer():
     return jsonify(result)
 
 @app.route('/event', methods=['GET'])
-@jwt_required
+#@jwt_required
 def get_all_events():
     result = events_share_schema.dump(
         Event.query.all()
@@ -144,7 +144,7 @@ def get_all_events():
     return jsonify(result)
 
 @app.route('/event/<id>', methods=['GET'])
-@jwt_required
+#@jwt_required
 def get_event(id):
     result = event_share_schema.dump(
         Event.query.filter_by(id=id).first()
@@ -153,7 +153,7 @@ def get_event(id):
     return jsonify(result)
 
 @app.route('/event/<type>/<date>', methods=['GET'])
-@jwt_required
+#@jwt_required
 def get_event_per_type(type, date):
     date_object = datetime.strptime(date, '%d/%m/%Y').date()
 
@@ -164,7 +164,7 @@ def get_event_per_type(type, date):
     return jsonify(result)
 
 @app.route('/occurrence', methods=['POST'])
-@jwt_required
+#@jwt_required
 def occurrence_register():
     whatsapp = request.json['whatsapp']
     date = datetime.now()
@@ -188,3 +188,8 @@ def occurrence_register():
     )
 
     return jsonify(result)
+
+
+# localização na tabela de trucker
+    # 
+# nova tabela para a fazer o link de trucker com event
