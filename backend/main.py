@@ -108,6 +108,21 @@ def get_trucker(id):
 
     return jsonify(result)
 
+@app.route('/trucker/localization', methods=['POST'])
+#@jwt_required
+def update_localization():
+    whatsapp = request.json['whatsapp']
+    latitude = request.json['latitude']
+    longitude = request.json['longitude']
+
+    trucker = Trucker.query.filter_by(whatsapp=whatsapp).first()
+    trucker.last_latitude = latitude
+    trucker.last_longitude = longitude
+
+    db.session.commit()
+
+    return jsonify({'message': 'Localização atulaizada com sucesso!'})
+
 @app.route('/event', methods=['POST'])
 #@jwt_required
 def event_registrer():
@@ -190,8 +205,6 @@ def occurrence_register():
     return jsonify(result)
 
 
-# localização na tabela de trucker
-    # 
 # nova tabela para a fazer o link de trucker com event
 
 # sugestoes bonus
