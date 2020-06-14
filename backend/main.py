@@ -152,13 +152,11 @@ def get_event(id):
 
     return jsonify(result)
 
-@app.route('/event/<type>/<date>', methods=['GET'])
+@app.route('/event/type/<type>', methods=['GET'])
 #@jwt_required
-def get_event_per_type(type, date):
-    date_object = datetime.strptime(date, '%d/%m/%Y').date()
-
+def get_event_per_type(type):
     result = event_share_schema.dump(
-        Event.query.filter_by(type_event=type, date=date_object)
+        Event.query.filter_by(type_event=type, date=datetime.now())
     )
 
     return jsonify(result)
