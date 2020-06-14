@@ -24,7 +24,7 @@ jwt = JWTManager(app)
 def home():
     return jsonify({'message': 'Server On'})
 
-@app.route('/auth/register', methods=['POST'])
+@app.route('/auth/register', methods=['OPTIONS', 'POST'])
 def register():
     username = request.json['username']
     password = request.json['password']
@@ -48,7 +48,7 @@ def register():
 
     return jsonify(result)
 
-@app.route('/auth/login', methods=['POST'])
+@app.route('/auth/login', methods=['OPTIONS', 'POST'])
 def login():
     username = request.json['username']
     password = request.json['password']
@@ -69,7 +69,7 @@ def login():
         'token': access_token
     }), 200
 
-@app.route('/trucker', methods=['POST'])
+@app.route('/trucker', methods=['OPTIONS', 'POST'])
 def trucker_registrer():
     name = request.json['name']
     age = request.json['age']
@@ -112,7 +112,7 @@ def get_trucker(id):
 
     return jsonify(result)
 
-@app.route('/trucker/localization', methods=['POST'])
+@app.route('/trucker/localization', methods=['OPTIONS', 'POST'])
 def update_localization():
     whatsapp = request.json['whatsapp']
     latitude = request.json['latitude']
@@ -126,7 +126,7 @@ def update_localization():
 
     return jsonify({'message': 'Localização atulaizada com sucesso!'})
 
-@app.route('/event', methods=['POST'])
+@app.route('/event', methods=['OPTIONS', 'POST'])
 def event_registrer():
     if request.json['type_event'] in ['eventos-saude', 'eventos-bem-estar', 'eventos-informativo']:
         name = request.json['name']
@@ -188,35 +188,45 @@ def get_event_per_date():
 
     return result_dump
 
-@app.route('/occurrence', methods=['POST'])
+@app.route('/occurrence', methods=['OPTIONS', 'POST'])
 def occurrence_register():
-    whatsapp = request.json['whatsapp']
-    date = datetime.utcnow()
-    type_occurrence = request.json['type_occurrence']
-    latitude = request.json['latitude']
-    longitude = request.json['longitude']
+    if request.json['type_occurrence'] in ['acidente', 'problema-de-saude', 'crime']:
+        whatsapp = request.json['whatsapp']
+        date = datetime.utcnow()
+        type_occurrence = request.json['type_occurrence']
+        latitude = request.json['latitude']
+        longitude = request.json['longitude']
 
-    occurrence = Occurrence(
-        whatsapp,
-        date,
-        type_occurrence,
-        latitude,
-        longitude
-    )
+        occurrence = Occurrence(
+            whatsapp,
+            date,
+            type_occurrence,
+            latitude,
+            longitude
+        )
 
-    db.session.add(occurrence)
-    db.session.commit()
+        db.session.add(occurrence)
+        db.session.commit()
 
-    result = occurrence_share_schema.dump(        
-        Occurrence.query.filter_by(whatsapp=whatsapp).first()
+        result = occurrence_share_schema.dump(        
+            Occurrence.query.filter_by(whatsapp=whatsapp).first()
+        )
+
+        return jsonify(result)
+    return jsonify({'error': 'Tipo de ocorrência inválida!'}) 
+
+@app.route('/occurrence', methods=['GET'])
+def get_all_occurrence():
+    result = occurrences_share_schema.dump(
+        Occurrence.query.all()
     )
 
     return jsonify(result)
 
-@app.route('/occurrence', methods=['GET'])
-def get_all_occurrenceS():
+@app.route('/occurrence/orderned', methods=['GET'])
+def get_all_occurrence_ordened():
     result = occurrences_share_schema.dump(
-        Occurrence.query.all()
+        Occurrence.query.order_by(Occurrence.date).limit(50)
     )
 
     return jsonify(result)
@@ -224,7 +234,7 @@ def get_all_occurrenceS():
 @app.route('/occurrence/<type_occurrence>', methods=['GET'])
 def get_occurrence_per_type(type_occurrence):
     if type_occurrence in ['acidente', 'problema-de-saude', 'crime']:
-        result = occurrence_share_schema.dump(
+        result = occurrences_share_schema.dump(
             Occurrence.query.filter_by(type_occurrence=type_occurrence).all()
         )
 
@@ -235,7 +245,7 @@ def get_occurrence_per_type(type_occurrence):
 @app.route('/occurrence/<whatsapp>/<type_occurrence>', methods=['GET'])
 def get_occurrence_per_whatsapp_and_type(whatsapp, type_occurrence):
     if type_occurrence in ['acidente', 'problema-de-saude', 'crime']:
-        result = occurrence_share_schema.dump(
+        result = occurrences_share_schema.dump(
             Occurrence.query.filter_by(
                 whatsapp=whatsapp,
                 type_occurrence=type_occurrence
@@ -246,7 +256,7 @@ def get_occurrence_per_whatsapp_and_type(whatsapp, type_occurrence):
 
     return jsonify({'error': 'Tipo de ocorrência inválida!'})
 
-@app.route('/participation', methods=['POST'])
+@app.route('/participation', methods=['OPTIONS', 'POST'])
 def participation_registrer():
     event_id = request.json['event_id']
     trucker_whatsapp = request.json['trucker_whatsapp']
