@@ -1,5 +1,4 @@
 from app import db, ma
-from werkzeug.security import generate_password_hash, check_password_hash
 
 class Trucker(db.Model):
     __tablename__ = 'truckers'
@@ -12,13 +11,13 @@ class Trucker(db.Model):
     last_longitude = db.Column(db.String(255))
     created_date = db.Column(db.Date(), nullable=False)
     
-    def __init__(self, name, age, whatsapp, created_date, last_latitude, last_longitude):
+    def __init__(self, name, age, whatsapp, last_latitude, last_longitude, created_date):
         self.name = name
         self.age = age
         self.whatsapp = whatsapp
-        self.created_date = created_date
         self.last_latitude = last_latitude
         self.last_longitude = last_longitude
+        self.created_date = created_date
 
     def __repr_(self):
         return f'<Trucker : {self.name} >'

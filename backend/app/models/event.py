@@ -1,5 +1,4 @@
 from app import db, ma
-from werkzeug.security import generate_password_hash, check_password_hash
 
 class Event(db.Model):
     __tablename__ = 'events'

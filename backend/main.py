@@ -60,24 +60,21 @@ def login():
     }), 200
 
 @app.route('/trucker', methods=['POST'])
-@jwt_required
+#@jwt_required
 def trucker_registrer():
     name = request.json['name']
     age = request.json['age']
     whatsapp = request.json['whatsapp']
-    created_date = datetime.now()
-
-    if not name:
-        return jsonify({'error': 'Nome não encontrado na requisição'}), 400
-    if not age:
-        return jsonify({'error': 'Age não encontrado na requisição'}), 400
-    if not whatsapp:
-        return jsonify({'error': 'Whatsapp não encontrado na requisição'}), 400
+    last_latitude = request.json['last_latitude']
+    last_longitude = request.json['last_longitude']
+    created_date = datetime.utcnow()
 
     trucker = Trucker(
         name,
         age,
         whatsapp,
+        last_latitude,
+        last_longitude,
         created_date
     )
 
@@ -128,7 +125,7 @@ def update_localization():
 def event_registrer():
     name = request.json['name']
     descripton = request.json['descripton']
-    date = datetime.strptime(request.json['date'], '%d/%m/%Y').date()
+    date = datetime.strptime(request.json['date'], '%d/%m/%Y').utcnow()
     type_event = request.json['type_event']
     latitude = request.json['latitude']
     longitude = request.json['longitude']
@@ -173,7 +170,7 @@ def get_event(id):
 #@jwt_required
 def get_event_per_type(type):
     result = event_share_schema.dump(
-        Event.query.filter_by(type_event=type, date=datetime.now())
+        Event.query.filter_by(type_event=type, date=datetime.utcnow())
     )
 
     return jsonify(result)
@@ -182,7 +179,7 @@ def get_event_per_type(type):
 #@jwt_required
 def occurrence_register():
     whatsapp = request.json['whatsapp']
-    date = datetime.now()
+    date = datetime.utcnow()
     type_occurrence = request.json['type_occurrence']
     latitude = request.json['latitude']
     longitude = request.json['longitude']
