@@ -7,3 +7,5 @@ __pycache__/
 backend/migrations/*
 
 backend/app/app.db
+
+/bot/selenium/*

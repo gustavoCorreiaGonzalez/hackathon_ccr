@@ -3,6 +3,7 @@ from datetime import datetime
 import requests
 import random
 import time
+import json
 
 class Pistao:
     def __init__(self):
@@ -11,16 +12,28 @@ class Pistao:
         self.drivers = {}
         self.last_action = {}
         self.last_location = {}
+        self.headers = {'content-type': 'application/json'}
+        self.last_ids = []
+        self.update = False
 
     def run(self):
         while True:
+            self.r = requests.get('http://34.229.190.77/event/last')
+            last_events = json.loads(self.r.content)
+            if self.last_ids != last_events:
+                self.last_ids = last_events
+                self.update = True
             for contact in self.api.get_contacts():
-                self.api.select_contact(contact)
+                self.api.select_contact(contact)    
+                if self.update is True:
+                    for event in last_events:
+                        self.api.send_text_message([event['name'], event['descripton'], event['date']])
                 locations = self.api.get_location_messages(contact)
                 messages = self.api.get_text_messages(contact)
                 self.update_locations(locations)
                 self.execute_commands(messages)
                 time.sleep(5)
+            self.update = False
             self.api.browser.refresh()
             time.sleep(10)
 
@@ -41,6 +54,8 @@ class Pistao:
                              'Digite *comandos* para explorar minhas funcionalidades.']
                     self.api.send_text_message(lines)
                     self.last_action[author] = {'action': 'registrar-idade', 'timestamp': timestamp}
+                    self.r = requests.post("http://34.229.190.77/trucker", data=json.dumps(self.drivers[author]), headers=self.headers)
+                    print(self.r.content)
 
                 if self.last_action[author]['action'] == 'registrar':
                     self.drivers[author]['name'] = message
@@ -86,25 +101,53 @@ class Pistao:
                         self.api.send_text_message('Emergência recebida. Um operador entrará em contato em instantes...')
 
                         if message == '1':
+                            json_1 = {'whatsapp': author, 'latitude': '0', 'longitude': '0', 'type_occurrence': 'acidente'}
                             self.last_action[author] = {'action': 'acidente', 'timestamp': timestamp}
+                            self.r = requests.post("http://34.229.190.77/occurrence", data=json.dumps(json_1), headers=self.headers)
+                            print(self.r.content)
+
                         if message == '2':
+                            json_2 = {'whatsapp': author, 'latitude': '0', 'longitude': '0', 'type_occurrence': 'problema-de-saude'}
                             self.last_action[author] = {'action': 'problema-de-saude', 'timestamp': timestamp}
+                            self.r = requests.post("http://34.229.190.77/occurrence", data=json.dumps(json_2), headers=self.headers)
+                            print(self.r.content)
+
                         if message == '3':
+                            json_3 = {'whatsapp': author, 'latitude': '0', 'longitude': '0', 'type_occurrence': 'crime'}
                             self.last_action[author] = {'action': 'crime', 'timestamp': timestamp}
+                            self.r = requests.post("http://34.229.190.77/occurrence", data=json.dumps(json_3), headers=self.headers)
+                            print(self.r.content)
 
                         self.api.send_text_message('Por favor envie sua localização atual clicando no botão *+* do WhatsApp.')
 
                     elif self.last_action[author]['action'] == 'eventos':
                         self.api.send_text_message('Listando eventos...')
-
+                        
                         if message == '1':
                             self.last_action[author] = {'action': 'eventos-saude', 'timestamp': timestamp}
+                            self.r = requests.get('http://34.229.190.77/event/type/eventos-saude')
+                            for event in json.loads(self.r.content):
+                                print(event)
+                                self.api.send_text_message([event['name'], event['descripton'], event['date']])
                         if message == '2':
                             self.last_action[author] = {'action': 'eventos-bem-estar', 'timestamp': timestamp}
+                            self.r = requests.get('http://34.229.190.77/event/type/eventos-bem-estar')
+                            for event in json.loads(self.r.content):
+                                self.api.send_text_message([event['name'], event['descripton'], event['date']])
                         if message == '3':
                             self.last_action[author] = {'action': 'eventos-informativo', 'timestamp': timestamp}
+                            self.r = requests.get('http://34.229.190.77/event/type/eventos-informativo')
+                            for event in json.loads(self.r.content):
+                                self.api.send_text_message([event['name'], event['descripton'], event['date']])
                     else:
                         self.last_action[author] = {'action': 'false-positive', 'timestamp': timestamp}
+
+                if message == 'participar':
+                    self.api.send_text_message(['Parabéns!! Você foi cadastrado no evento.'])
+
+                if message == 'pedagio':
+                    self.api.send_text_message(['O preço atual do pedágio é de R$ 15,00 por eixo.'])
+                    
 
     def update_locations(self, locations):
         # Atualiza as últimas localizacoes de cada caminhoneiro
@@ -117,6 +160,12 @@ class Pistao:
 
             if timestamp > self.last_location[author]['timestamp']:
                 self.last_location[author] = {'coordinate': locations[key], 'timestamp': timestamp}
+                coordinate = locations[key].split('%2C')
+                latitude = coordinate[0].split('-')[2]
+                longitude = coordinate[1].split('&')[0].replace('+-', '')
+                json_location = {"whatsapp": author, "latitude": latitude, "longitude": longitude}
+                self.r = requests.post("http://34.229.190.77/trucker/localization", data=json.dumps(json_location), headers=self.headers)
+                print(self.r.content)
 
 pistao = Pistao()
 pistao.run()
