@@ -119,15 +119,21 @@ def update_localization():
     longitude = request.json['longitude']
 
     trucker = Trucker.query.filter_by(whatsapp=whatsapp).first()
-    trucker.last_latitude = latitude
-    trucker.last_longitude = longitude
 
-    db.session.commit()
+    if trucker:
+        trucker.last_latitude = latitude
+        trucker.last_longitude = longitude
 
-    return jsonify({'message': 'Localização atulaizada com sucesso!'})
+        db.session.commit()
+
+        return jsonify({'message': 'Localização atulaizada com sucesso!'})
+    return jsonify({'message': 'Caminhoneiro não cadastrado!'})
 
 @app.route('/event', methods=['OPTIONS', 'POST'])
 def event_registrer():
+    if request.method == 'OPTIONS':
+        return jsonify({})
+
     if request.json['type_event'] in ['eventos-saude', 'eventos-bem-estar', 'eventos-informativo']:
         name = request.json['name']
         descripton = request.json['descripton']
@@ -176,6 +182,14 @@ def get_event(id):
 def get_event_per_type(type_event):
     result = events_share_schema.dump(
         Event.query.filter_by(type_event=type_event, date=datetime.utcnow().strftime('%Y-%m-%d')).all()
+    )
+
+    return jsonify(result)
+
+@app.route('/event/last', methods=['GET'])
+def get_last_events():
+    result = events_share_schema.dump(
+        Event.query.filter_by(date=datetime.utcnow().strftime('%Y-%m-%d')).all()
     )
 
     return jsonify(result)
