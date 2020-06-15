@@ -36,7 +36,7 @@ Gerar build de produção && subir o projeto local, antes de rodar o build:
 
 # Back End Hackathon
 
-### Install, Migrate, Run
+### Install
 
 ```bash
 # Clonar o repositório
@@ -51,12 +51,35 @@ $ pip3 install -r requirements.txt
 # Setar as variáveis de ambiente
 $ export FLASK_APP=main.py
 $ export FLASK_ENV=development
+```
 
+### Migrate do banco de dados
+
+```bash
 # Iniciar o Database
 $ flask db init 
 
 # Rodar Migrates
 $ flask db migrate
 
+# Atualizar as Migrates
+$ flask db upgrade
+```
+
+### Inicar o servidor
+
+```bash
 # Iniciar o server
 $ flask run
+```
+
+# BOT WHATSAPP Hackathon
+
+### Inicar o bot
+```bash
+# Ir par ao repositório
+$ cd bot
+
+# Iniciar o server
+$ python3 bot.py
+```
