@@ -21,7 +21,7 @@ Gerar build de desenvolvimento && subir o projeto local, antes de rodar o build:
 ### 2 - build development mode:
 
 ```
-      npm run build:dev
+      npm run build
       npx serve -s build
 ```
 
@@ -30,7 +30,7 @@ Gerar build de produção && subir o projeto local, antes de rodar o build:
 ### 4 - build production mode:
 
 ```
-      npm run build:prod
+      npm run build
       npx serve -s build
 ```
 
